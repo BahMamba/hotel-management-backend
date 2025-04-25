@@ -24,8 +24,8 @@ public class RoomController {
     }
 
     @GetMapping("/by-hotel/{hotelId}")
-    public ResponseEntity<List<Room>> getRoomsByHotelId(@PathVariable Long hotelId) {
-        List<Room> rooms = roomService.findRoomsByHotelId(hotelId);
+    public ResponseEntity<Page<Room>> getRoomsByHotelId(@PathVariable Long hotelId, Pageable pageable) {
+        Page<Room> rooms = roomService.findRoomsByHotelId(pageable, hotelId);
         return ResponseEntity.ok(rooms);
     }
 

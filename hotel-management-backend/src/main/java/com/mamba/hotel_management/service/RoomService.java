@@ -26,8 +26,8 @@ public class RoomService {
         return roomRepository.findAll(pageable);
     }
 
-    public List<Room> findRoomsByHotelId(Long hotelId) {
-        return roomRepository.findByHotelId(hotelId);
+    public Page<Room> findRoomsByHotelId(Pageable pageable, Long hotelId) {
+        return roomRepository.findByHotelId(hotelId, pageable);
     }
 
     public List<Room> findRoomsByTypeAndAvailability(String type, boolean isAvailable) {

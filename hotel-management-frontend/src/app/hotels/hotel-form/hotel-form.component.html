@@ -1,0 +1,28 @@
+<div class="max-w-xl mx-auto p-6 bg-white shadow rounded-lg">
+    <h2 class="text-2xl font-bold mb-4">
+      {{ hotelId ? 'Edit Hotel' : 'Add Hotel' }}
+    </h2>
+  
+    <form [formGroup]="hotelForm" (ngSubmit)="onSubmit()">
+      <div class="mb-4">
+        <label class="block font-semibold mb-1">Name</label>
+        <input formControlName="name" class="w-full border rounded px-3 py-2" />
+      </div>
+      <div class="mb-4">
+        <label class="block font-semibold mb-1">Address</label>
+        <input formControlName="address" class="w-full border rounded px-3 py-2" />
+      </div>
+      <div class="mb-4">
+        <label class="block font-semibold mb-1">City</label>
+        <input formControlName="city" class="w-full border rounded px-3 py-2" />
+      </div>
+  
+      <div *ngIf="errorMessage" class="mb-4 text-red-600">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="mb-4 text-green-600">{{ successMessage }}</div>
+  
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        {{ hotelId ? 'Update' : 'Create' }}
+      </button>
+    </form>
+  </div>
+  

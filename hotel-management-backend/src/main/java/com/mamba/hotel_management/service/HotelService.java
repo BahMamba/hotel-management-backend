@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 
 @Service
 public class HotelService {
@@ -21,8 +20,8 @@ public class HotelService {
         return hotelRepository.findAll(pageable);
     }
 
-    public List<Hotel> findHotelsByNameAndAddress(String name, String address) {
-        return hotelRepository.findByNameContainingIgnoreCaseAndAddressContainingIgnoreCase(name, address);
+    public Page<Hotel> searchHotelsByKeyword(String keyword, Pageable pageable) {
+        return hotelRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(keyword, keyword, pageable);
     }
 
     public Hotel findHotelById(Long id) {

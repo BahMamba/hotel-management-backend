@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/hotels")
 public class HotelController {
@@ -25,11 +23,11 @@ public class HotelController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Hotel>> searchHotels(
-            @RequestParam(required = false, defaultValue = "") String name,
-            @RequestParam(required = false, defaultValue = "") String address) {
-        List<Hotel> hotels = hotelService.findHotelsByNameAndAddress(name, address);
-        return ResponseEntity.ok(hotels);
+    public ResponseEntity<Page<Hotel>> searchHotels(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            Pageable pageable) {
+        Page<Hotel> hotels = hotelService.searchHotelsByKeyword(keyword, pageable);
+        return ResponseEntity.ok(hotels); 
     }
 
     @GetMapping("/{id}")

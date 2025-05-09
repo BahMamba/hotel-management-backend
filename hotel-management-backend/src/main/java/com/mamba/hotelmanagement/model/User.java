@@ -1,15 +1,15 @@
-package com.mamba.hotel_management.model;
+package com.mamba.hotelmanagement.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "hotels")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Hotel {
+public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,9 +17,13 @@ public class Hotel {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String address;
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(nullable = false)
-    private String city;
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 }

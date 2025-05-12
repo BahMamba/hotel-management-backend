@@ -7,9 +7,6 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class HotelController {
     private final HotelService hotelService;
-    private final PagedResourcesAssembler<Hotel> pagedResourcesAssembler;
 
     @PostMapping
     public ResponseEntity<?> createHotel(@RequestBody Hotel hotel, @AuthenticationPrincipal UserDetails userDetails){
@@ -55,26 +51,26 @@ public class HotelController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<PagedModel<EntityModel<Hotel>>> getHotelsByAdmin(@RequestParam(defaultValue = "0") int page,
-                                                                            @RequestParam(defaultValue = "10") int size,
-                                                                            @AuthenticationPrincipal UserDetails userDetails
-                                                                            ){
+    public ResponseEntity<Page<Hotel>> getHotelsByAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetails userDetails
+    ){
         try {
             Page<Hotel> hotels = hotelService.getHotelByAdmin(userDetails, page, size);
-            return ResponseEntity.ok(pagedResourcesAssembler.toModel(hotels));
+            return ResponseEntity.ok(hotels);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(pagedResourcesAssembler.toModel(Page.empty()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Page.empty());
         }
     }
 
     @GetMapping
-    public ResponseEntity<PagedModel<EntityModel<Hotel>>> getAllHotels(
+    public ResponseEntity<Page<Hotel>> getAllHotels(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String city) {
         Page<Hotel> hotels = hotelService.getAllHotels(city, page, size);
-        return ResponseEntity.ok(pagedResourcesAssembler.toModel(hotels));
+        return ResponseEntity.ok(hotels);
     }
 
     @GetMapping("/{id}")
@@ -86,5 +82,5 @@ public class HotelController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("error", e.getMessage()));
         }
-    } 
+    }
 }

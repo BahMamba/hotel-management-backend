@@ -10,4 +10,5 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     Page<Room> findByHotel(Hotel hotel, Pageable pageable);
     Page<Room> findByTypeContainingIgnoreCase(String type, Pageable pageable);
     Page<Room> findByIsAvailable(boolean isAvailable, Pageable pageable);
+    boolean existsByHotel(Hotel hotel);
 }

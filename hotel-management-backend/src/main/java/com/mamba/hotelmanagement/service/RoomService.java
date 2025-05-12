@@ -1,4 +1,3 @@
-
 package com.mamba.hotelmanagement.service;
 
 import org.springframework.data.domain.Page;
@@ -25,7 +24,7 @@ public class RoomService {
     private final UserRepository userRepository;
     private final HotelRepository hotelRepository;
 
-    public Room addRoom(Room room, Long hotelId, UserDetails userDetails){
+    public Room addRoom(Room room, Long hotelId, UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (user.getRole() == null || !Role.ADMIN_HOTEL.equals(user.getRole())) {
@@ -73,16 +72,21 @@ public class RoomService {
         roomRepository.delete(room);
     }
 
-    public Page<Room> getRooms(Long hotelId, String roomType, Boolean isAvailable, int page, int size){
+    public Page<Room> getRooms(Long hotelId, String roomType, Boolean isAvailable, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Hotel hotel = null;
         if (hotelId != null) {
-            hotel = hotelRepository.findById(hotelId)
-                    .orElseThrow(() -> new RuntimeException("Hotel not found!"));
-        }
-
-        if (hotel != null) {
-            return roomRepository.findByHotel(hotel, pageable);
+            // Log pour déboguer
+            System.out.println("Checking hotelId=" + hotelId + ", exists=" + hotelRepository.existsById(hotelId));
+            if (!hotelRepository.existsById(hotelId)) {
+                return null; // Hôtel inexistant
+            }
+            Hotel hotel = hotelRepository.findById(hotelId).orElse(null);
+            if (hotel == null) {
+                System.out.println("findById(" + hotelId + ") returned null");
+                return null;
+            }
+            Page<Room> rooms = roomRepository.findByHotel(hotel, pageable);
+            return rooms; // Retourne vide ou non
         }
         if (isAvailable != null) {
             return roomRepository.findByIsAvailable(isAvailable, pageable);

@@ -1,83 +1,97 @@
+
 package com.mamba.hotelmanagement.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
 import com.mamba.hotelmanagement.model.Hotel;
+import com.mamba.hotelmanagement.model.Role;
 import com.mamba.hotelmanagement.model.Room;
 import com.mamba.hotelmanagement.model.User;
-import com.mamba.hotelmanagement.model.Role;
 import com.mamba.hotelmanagement.repository.HotelRepository;
 import com.mamba.hotelmanagement.repository.RoomRepository;
 import com.mamba.hotelmanagement.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import lombok.AllArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class RoomService {
+
     private final RoomRepository roomRepository;
-    private final HotelRepository hotelRepository;
     private final UserRepository userRepository;
+    private final HotelRepository hotelRepository;
 
-    public Page<Room> findRoomsByHotelId(Long hotelId, boolean availableOnly, Pageable pageable) {
-        if (availableOnly) {
-            return roomRepository.findByHotelIdAndIsAvailableTrue(hotelId, pageable);
-        }
-        return roomRepository.findByHotelId(hotelId, pageable);
-    }
-
-    public Room findRoomById(Long hotelId, Long id) {
-        Room room = roomRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
-        if (!room.getHotel().getId().equals(hotelId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room does not belong to this hotel");
-        }
-        return room;
-    }
-
-    public Room createRoom(Long hotelId, Room room, Long adminId) {
-        if (room.getRoomNumber() == null || room.getType() == null || room.getPrice() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room number, type, and price must not be null");
+    public Room addRoom(Room room, Long hotelId, UserDetails userDetails){
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == null || !Role.ADMIN_HOTEL.equals(user.getRole())) {
+            throw new RuntimeException("Only admins can create rooms");
         }
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
-        if (!admin.getRole().equals(Role.ADMIN_HOTEL)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User must be an admin");
+                .orElseThrow(() -> new RuntimeException("Hotel not found"));
+        
+        if (!hotel.getAdminUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Only admins can manage this hotel");
         }
-
         room.setHotel(hotel);
+        return roomRepository.save(room);   
+    }
+
+    public Room updateRoom(Long id, Room updateRoom, UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == null || !Role.ADMIN_HOTEL.equals(user.getRole())) {
+            throw new RuntimeException("Only admins can update rooms");
+        }
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        if (!room.getHotel().getAdminUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Only admins can manage this hotel");
+        }
+        room.setRoomNumber(updateRoom.getRoomNumber());
+        room.setType(updateRoom.getType());
+        room.setPrice(updateRoom.getPrice());
+        room.setAvailable(updateRoom.isAvailable());
         return roomRepository.save(room);
     }
 
-    public Room updateRoom(Long hotelId, Long id, Room room, Long adminId) {
-        Room existRoom = findRoomById(hotelId, id);
-        if (room.getRoomNumber() == null || room.getType() == null || room.getPrice() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room number, type, and price must not be null");
+    public void deleteRoom(Long id, UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == null || !Role.ADMIN_HOTEL.equals(user.getRole())) {
+            throw new RuntimeException("Only admins can delete rooms");
         }
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
-        if (!admin.getRole().equals(Role.ADMIN_HOTEL)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User must be an admin");
-        }
-
-        existRoom.setRoomNumber(room.getRoomNumber());
-        existRoom.setType(room.getType());
-        existRoom.setPrice(room.getPrice());
-        existRoom.setAvailable(room.isAvailable());
-        return roomRepository.save(existRoom);
-    }
-
-    public void deleteRoom(Long hotelId, Long id, Long adminId) {
-        Room room = findRoomById(hotelId, id);
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
-        if (!admin.getRole().equals(Role.ADMIN_HOTEL)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User must be an admin");
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        if (!room.getHotel().getAdminUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Only admins can manage this hotel");
         }
         roomRepository.delete(room);
+    }
+
+    public Page<Room> getRooms(Long hotelId, String roomType, Boolean isAvailable, int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        Hotel hotel = null;
+        if (hotelId != null) {
+            hotel = hotelRepository.findById(hotelId)
+                    .orElseThrow(() -> new RuntimeException("Hotel not found!"));
+        }
+
+        if (hotel != null) {
+            return roomRepository.findByHotel(hotel, pageable);
+        }
+        if (isAvailable != null) {
+            return roomRepository.findByIsAvailable(isAvailable, pageable);
+        }
+        return roomRepository.findByTypeContainingIgnoreCase(roomType != null ? roomType : "", pageable);
+    }
+
+    public Room getRoomById(Long id) {
+        return roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
     }
 }

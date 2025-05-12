@@ -1,5 +1,9 @@
 package com.mamba.hotelmanagement.model;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,4 +32,8 @@ public class Hotel {
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
     private User adminUser;
+
+    @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Room> rooms;
 }

@@ -57,7 +57,8 @@ public class HotelController {
     @GetMapping("/admin")
     public ResponseEntity<PagedModel<EntityModel<Hotel>>> getHotelsByAdmin(@RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int size,
-                                                                            @AuthenticationPrincipal UserDetails userDetails){
+                                                                            @AuthenticationPrincipal UserDetails userDetails
+                                                                            ){
         try {
             Page<Hotel> hotels = hotelService.getHotelByAdmin(userDetails, page, size);
             return ResponseEntity.ok(pagedResourcesAssembler.toModel(hotels));
@@ -85,5 +86,5 @@ public class HotelController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("error", e.getMessage()));
         }
-    }
+    } 
 }

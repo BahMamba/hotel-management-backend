@@ -1,3 +1,4 @@
+
 package com.mamba.hotelmanagement.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,11 +29,12 @@ public class Room {
 
     private boolean isAvailable = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "hotel_id", nullable = false)
     @JsonIgnore
     private Hotel hotel;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 }
